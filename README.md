@@ -1,481 +1,310 @@
-# 🛒 Indian E-Commerce Sales Analytics
+# 📖 Data Dictionary — Indian E-Commerce Sales Analytics
 
-## 📌 Project Overview
+## 1. Overview
 
-Indian E-Commerce Sales Analytics is an end-to-end Data Engineering and Analytics project built using **Databricks and PySpark**.
+This data dictionary describes the datasets and tables used in the Indian E-Commerce Sales Analytics project.
 
-The project processes customer, product, and sales data through a **Medallion Architecture (Bronze → Silver → Gold)** and produces business-ready analytics for understanding sales, customers, products, categories, brands, payments, orders, ratings, and coupons.
+The project contains three source datasets:
 
-The pipeline is orchestrated using **Databricks Workflows** with parallel Silver processing, retry configuration, email notifications, and final data quality validation.
+- Customers
+- Products
+- Sales
 
----
-
-## 🎯 Business Objective
-
-The objective of this project is to transform raw e-commerce data into reliable and analytics-ready datasets that help answer important business questions such as:
-
-- How much revenue is being generated?
-- How is revenue changing month over month?
-- Which states and cities generate the most sales?
-- Which customers spend the most?
-- Which products and categories perform best?
-- Which brands generate high sales volume?
-- Which payment methods are most popular?
-- How do ratings relate to sales?
-- How effective are coupon codes?
-- Where are order cancellations and returns increasing?
+The data is processed through Bronze, Silver, and Gold layers using Databricks and PySpark.
 
 ---
 
-# 🏗️ Architecture
+# 2. Source Datasets
 
-The project follows the **Medallion Architecture**.
+## 2.1 Customers Dataset
+
+**File:** `customers.csv`
+
+**Records:** 40,000
+
+| Column | Description |
+|---|---|
+| Customer_ID | Unique identifier for each customer |
+| Customer_Name | Customer name |
+| Gender | Customer gender |
+| Age | Customer age |
+| Age_Group | Customer age category |
+| Date_of_Birth | Customer date of birth |
+| Email | Customer email address |
+| Phone | Customer phone number |
+| City | Customer city |
+| State | Customer state |
+| Pincode | Customer postal code |
+| Registration_Date | Date when customer registered |
+| Customer_Tier | Customer classification/tier |
+| Total_Orders | Total delivered orders associated with the customer |
+| Total_Spent | Total spending from delivered orders |
+
+---
+
+## 2.2 Products Dataset
+
+**File:** `products.csv`
+
+**Records:** 2,000
+
+| Column | Description |
+|---|---|
+| Product_ID | Unique identifier for each product |
+| Product_Name | Name of the product |
+| Category | Product category |
+| Brand | Product brand |
+| Original_Price | Original product price |
+| Discount_Percent | Discount percentage |
+| Discount_Amount | Discount amount |
+| Selling_Price | Final selling price after discount |
+| Stock_Quantity | Available stock quantity |
+| Weight_kg | Product weight in kilograms |
+| Avg_Rating | Average product rating |
+| Total_Reviews | Total number of product reviews |
+
+---
+
+## 2.3 Sales Dataset
+
+**File:** `sales.csv`
+
+**Records:** 250,000
+
+| Column | Description |
+|---|---|
+| Order_ID | Unique identifier for each order |
+| Customer_ID | Customer associated with the order |
+| Product_ID | Product associated with the order |
+| Order_Date | Date when the order was placed |
+| Order_Time | Time when the order was placed |
+| Delivery_Date | Date when the order was delivered |
+| Quantity | Number of units ordered |
+| Unit_Price | Price per unit |
+| Order_Value | Value of the ordered items |
+| Shipping_Cost | Shipping cost for the order |
+| Coupon_Code | Coupon applied to the order |
+| Coupon_Discount | Discount provided through the coupon |
+| Total_Amount | Final transaction amount |
+| Payment_Mode | Payment method used |
+| Order_Status | Status of the order |
+| Rating | Customer rating for the order |
+| Review_Text | Customer review text |
+| City | Customer/order city |
+| State | Customer/order state |
+| Customer_Age | Customer age at the time of the order |
+| Customer_Age_Group | Customer age category |
+
+---
+
+# 3. Bronze Layer
+
+The Bronze layer stores the ingested source data in Delta tables.
+
+| Table | Source |
+|---|---|
+| bronze_customers | customers.csv |
+| bronze_products | products.csv |
+| bronze_sales | sales.csv |
+
+Purpose:
+
+- Raw data ingestion
+- Preserve source information
+- Store data in Delta format
+
+---
+
+# 4. Silver Layer
+
+The Silver layer contains cleaned and validated datasets.
+
+| Table | Description |
+|---|---|
+| silver_customers | Cleaned customer data |
+| silver_products | Cleaned product data |
+| silver_sales | Cleaned and validated sales data |
+
+Main processing includes:
+
+- Data type standardization
+- Null validation
+- Duplicate validation
+- Date validation
+- Numeric validation
+- Data quality checks
+
+---
+
+# 5. Gold Layer
+
+The Gold layer contains analytics-ready dimensional and fact tables.
+
+## 5.1 dim_customer
+
+Customer dimension containing customer-level information used for analytics.
+
+## 5.2 dim_product
+
+Product dimension containing product, category, brand, pricing, and rating information.
+
+## 5.3 dim_date
+
+Date dimension used for time-based analysis such as:
+
+- Monthly revenue
+- Quarterly revenue
+- Revenue trends
+- Seasonality
+
+## 5.4 fact_sales
+
+The main sales fact table.
+
+### Grain
+
+**One row per Order_ID**
+
+Important measures and attributes include:
+
+| Column | Description |
+|---|---|
+| Order_ID | Unique order identifier |
+| Customer_ID | Customer identifier |
+| Product_ID | Product identifier |
+| Date_Key | Date dimension key |
+| Quantity | Units ordered |
+| Unit_Price | Price per unit |
+| Order_Value | Order item value |
+| Shipping_Cost | Shipping cost |
+| Coupon_Discount | Coupon discount |
+| Total_Amount | Final transaction amount |
+| Payment_Mode | Payment method |
+| Order_Status | Order status |
+| Rating | Customer rating |
+| Is_Delivered | Indicates whether the order was delivered |
+| Realized_Revenue | Revenue recognized for delivered orders |
+
+---
+
+# 6. Gold Analytics Tables
+
+The project creates business-ready analytics tables for 13 business questions.
+
+| Analytics Table | Business Purpose |
+|---|---|
+| gold_total_sales | Overall sales KPIs |
+| gold_monthly_revenue | Monthly revenue and MoM growth |
+| gold_revenue_trend | Revenue trends, quarterly performance and anomalies |
+| gold_order_status | Order delivery, cancellation and return analysis |
+| gold_payment_method | Payment method sales performance |
+| State-wise analytics | State-level sales performance |
+| City-wise analytics | City and tier-level sales performance |
+| Top customer analytics | Top spending customers |
+| Best-selling product analytics | Top products by units and revenue |
+| Category analytics | Category performance |
+| Brand analytics | Brand performance |
+| Rating analytics | Product ratings and rating-sales relationship |
+| gold_coupon_performance | Coupon performance |
+
+---
+
+# 7. Important Business Rules
+
+## Revenue Rule
+
+For the main revenue KPIs, only **Delivered orders** are treated as realized revenue.
 
 ```text
-                    RAW CSV FILES
-                         │
-              ┌──────────┼──────────┐
-              ↓          ↓          ↓
-          Customers   Products    Sales
-              │          │          │
-              └──────────┼──────────┘
-                         ↓
-                    BRONZE LAYER
-                         ↓
-              ┌──────────┼──────────┐
-              ↓          ↓          ↓
-          Silver      Silver      Silver
-        Customers    Products     Sales
-              └──────────┼──────────┘
-                         ↓
-                     GOLD LAYER
-                         ↓
-              Dimensions + Fact Tables
-                         ↓
-                  GOLD ANALYTICS
-                         ↓
-                   DATA QUALITY
-                         ↓
-                      SUCCESS
+Realized_Revenue =
+    Total_Amount when Order_Status = Delivered
+    0 otherwise
+Failed Orders
 
+For order-status analysis:
 
-
-🥉 Bronze Layer
-
-The Bronze layer ingests the raw CSV files into Delta tables with minimal transformation.
-
-Source Files
-customers.csv
-products.csv
-sales.csv
-Source Data Volume
-Dataset	Records
-Customers	40,000
-Products	2,000
-Sales	250,000
-Bronze Tables
-bronze_customers
-bronze_products
-bronze_sales
-🥈 Silver Layer
-
-The Silver layer performs data cleaning, standardization, validation, and preparation for analytical processing.
-
-Silver Tables
-silver_customers
-silver_products
-silver_sales
-Silver Processing
-
-The Silver layer includes:
-
-Data type standardization
-Null validation
-Duplicate validation
-Date validation
-Numeric validation
-Foreign key validation
-Business rule validation
-Data cleansing
-Silver Processing Strategy
-
-The three Silver notebooks run independently after Bronze ingestion.
-
-                 bronze_ingestion
-                 /       |       \
-                ↓        ↓        ↓
-      silver_customers  silver_products  silver_sales
-
-This allows the independent Silver transformations to execute in parallel.
-
-🥇 Gold Layer
-
-The Gold layer contains business-ready dimensional and fact tables.
-
-Gold Dimensions
-dim_customer
-dim_product
-dim_date
-Gold Fact
-fact_sales
-Fact Table Grain
-
-The fact_sales table contains one row per Order_ID.
-
-Important business fields include:
-
-Order_ID
-Customer_ID
-Product_ID
-Date_Key
-Quantity
-Unit_Price
-Order_Value
-Shipping_Cost
-Coupon_Discount
-Total_Amount
-Payment_Mode
-Order_Status
-Rating
-Is_Delivered
-Realized_Revenue
-
-For revenue analytics, delivered orders are treated as realized sales.
-
-📊 Gold Analytics
-
-The project answers 13 major business questions.
-
-1. Total Sales
-
-Measures:
-
-Total Gross Revenue
-Total Units Sold
-Total Delivered Orders
-Average Order Value (AOV)
-2. Monthly Revenue
-
-Analyzes:
-
-Monthly Gross Revenue
-Monthly Units Sold
-Delivered Orders
-AOV
-Month-over-Month Revenue Growth
-3. Revenue Trend & Seasonality
-
-Analyzes:
-
-Monthly revenue trends
-Quarterly revenue
-Quarter-over-quarter growth
-Seasonal patterns
-Revenue anomalies
-
-Revenue anomalies are identified using statistical analysis such as Z-score.
-
-4. Order Status Performance
-
-Analyzes:
-
-Delivered orders
-Cancelled orders
-Returned orders
-Failed orders
-Monthly failure rate
-
-Failed orders are treated as:
-
+Failed Orders =
 Cancelled + Returned
-5. Payment Method Performance
+Coupon Standardization
 
-Analyzes sales distribution across:
-
-UPI
-Net Banking
-Credit/Debit Card
-Cash on Delivery
-
-Metrics include:
-
-Orders
-Revenue
-Units Sold
-AOV
-Revenue Share
-6. State-wise Sales
-
-Analyzes sales performance by Indian states.
-
-The analysis identifies:
-
-High-revenue states
-Low-revenue states
-Revenue contribution
-State-level order performance
-
-Note: True market penetration requires external population/TAM data. State revenue/order share is therefore used as a proxy.
-
-7. City-wise Sales
-
-Analyzes:
-
-City-level order volume
-Sales
-Average basket size
-Tier-1 / Tier-2 / Tier-3 performance
-8. Top Customers
-
-Identifies the top 50 customers based on spending.
-
-Metrics include:
-
-Total spending
-Number of orders
-Average order value
-9. Best-Selling Products
-
-Identifies top-performing products based on:
-
-Units sold
-Revenue
-
-The analysis identifies the top 10 products.
-
-10. Category Performance
-
-Analyzes product categories based on:
-
-Sales volume
-Revenue
-Units sold
-Category performance
-11. Brand Performance
-
-Analyzes:
-
-Brand revenue
-Units sold
-Revenue per unit
-High-volume / low-value brands
-
-Note: True profit margin cannot be calculated because the dataset does not contain COGS. Revenue per unit and discount metrics are used as proxies.
-
-12. Product Ratings
-
-Analyzes:
-
-Average rating by category
-Product ratings
-Rating distribution
-Relationship between ratings and sales
-
-Correlation analysis is used to examine the relationship between ratings and sales.
-
-13. Coupon Performance
-
-Analyzes:
-
-Coupon usage
-Revenue
-Orders
-Units sold
-Average discount
-AOV
-Revenue share
-
-Coupon codes are standardized so missing/blank coupon values are treated as:
+Null or blank coupon codes are standardized to:
 
 NO_COUPON
+Negative Transaction Amounts
 
-Coupon analysis is observational. A lower AOV for discounted orders should not automatically be interpreted as a causal effect of coupons.
+Five records contain negative Total_Amount values because the coupon discount exceeds the small transaction amount.
 
-🧪 Data Quality
+These records are retained and flagged for data-quality review.
 
-A dedicated Data Quality notebook validates the pipeline output.
+8. Data Quality Summary
 
-Data Quality Checks
-Row count validation
-Primary key validation
-Foreign key validation
-Date foreign key validation
-Critical null checks
-Delivery date validation
-Quantity validation
-Order status validation
-Negative transaction amount detection
-Revenue reconciliation
-Delivered units reconciliation
-Final Data Quality Result
-=======================================================
+The final data quality validation produced:
+
 Failed Checks   : 0
 Warning Checks  : 1
 Overall Status  : PASS
-=======================================================
 
-The warning is related to 5 negative Total_Amount records caused by coupon discounts exceeding the small transaction amount.
+The warning is related to the five negative transaction amounts described above.
 
-These records were retained and flagged instead of silently removing source data.
+9. Data Relationships
+dim_customer
+      │
+      │ Customer_ID
+      ↓
+fact_sales
+      │
+      │ Product_ID
+      ↓
+dim_product
 
-⚙️ Databricks Workflow
+fact_sales
+      │
+      │ Date_Key
+      ↓
+dim_date
 
-The entire pipeline is automated using Databricks Workflows.
+The main relationships are:
 
-Workflow Name
-ecommerce_sales_analytics_pipeline
-Tasks
-01_bronze_ingestion
-02_silver_customers
-03_silver_products
-04_silver_sales
-05_gold_dimensions
-06_gold_fact_sales
-07_gold_analytics
-08_data_quality
-Workflow Dependency
-                 ┌── silver_customers ──┐
-                 │                      │
-bronze_ingestion ├── silver_products ───┼──→ gold_dimensions
-                 │                      │
-                 └── silver_sales ──────┘
-                                             ↓
-                                      gold_fact_sales
-                                             ↓
-                                       gold_analytics
-                                             ↓
-                                        data_quality
-🚀 Pipeline Optimization
+Customer_ID → dim_customer.Customer_ID
+Product_ID  → dim_product.Product_ID
+Date_Key    → dim_date.Date_Key
+10. Data Volumes
+Layer	Table	Records
+Bronze	bronze_customers	40,000
+Bronze	bronze_products	2,000
+Bronze	bronze_sales	250,000
+Silver	silver_customers	40,000
+Silver	silver_products	2,000
+Silver	silver_sales	250,000
+Gold	dim_customer	40,000
+Gold	dim_product	2,000
+Gold	dim_date	760
+Gold	fact_sales	250,000
+11. Data Limitations
 
-The workflow uses parallel execution where possible.
+Some business metrics require additional external data.
 
-The following tasks run independently after Bronze:
+Market Penetration
 
-silver_customers
-silver_products
-silver_sales
+True market penetration requires population or total addressable market data.
 
-This reduces unnecessary sequential execution and improves pipeline efficiency.
+The project therefore uses state revenue/order contribution as a proxy.
 
-🔁 Retry Configuration
+Profit Margin
 
-Each workflow task is configured with:
+True profit margin cannot be calculated because COGS is not available.
 
-Maximum retries: 2
-Retry interval: 5 minutes
+Revenue per unit and discount metrics are used as proxies.
 
-This provides resilience against temporary infrastructure or execution failures.
+Inventory Turnover
 
-📧 Email Notifications
+True inventory turnover requires inventory history or average inventory data.
 
-The Databricks Job is configured to send email notifications for:
-
-Pipeline Success
-Pipeline Failure
-
-This allows pipeline failures or successful executions to be monitored without manually checking the Job UI.
-
-🛠️ Technology Stack
-Technology	Purpose
-Python	Programming and transformation logic
-PySpark	Distributed data processing
-Databricks	Data engineering platform
-Delta Lake	Data storage
-SQL	Data analysis and validation
-Databricks Workflows	Pipeline orchestration
-GitHub	Version control and project documentation
-📁 Project Structure
-Indian-E-Commerce-Sales-Analytics/
-│
-├── 01_bronze_ingestion
-├── 02_silver_customers
-├── 03_silver_products
-├── 04_silver_sales
-├── 05_gold_dimensions
-├── 06_gold_fact_sales
-├── 07_gold_analytics
-├── 08_data_quality
-│
-├── workflows/
-│   └── ecommerce_sales_analytics_pipeline
-│
-├── documentation/
-│   ├── data_dictionary
-│   └── architecture
-│
-└── README.md
-📈 Key Project Outcomes
-
-The project successfully demonstrates:
-
-End-to-end data engineering
-Medallion Architecture
-PySpark transformations
-Delta Lake tables
-Dimensional modeling
-Fact table design
-Business analytics
-Data quality validation
-Parallel processing
-Workflow orchestration
-Retry handling
-Email monitoring
-
-The final pipeline successfully processes:
-
-40,000 Customers
-2,000 Products
-250,000 Sales Orders
-
-with:
-
-0 Failed Data Quality Checks
-1 Warning
-Overall Data Quality: PASS
-🔮 Future Enhancements
-
-Possible future improvements include:
-
-Incremental data ingestion
-Change Data Capture (CDC)
-Apache Airflow integration
-Real-time Kafka streaming
-Power BI / Tableau dashboard
-Azure Data Lake Storage integration
-Automated data quality alerts
-External market penetration datasets
-Inventory history for true inventory turnover
-COGS data for true profit-margin analysis
-👨‍💻 Author
-Pradeep Kumar Behara
-
-Aspiring Data Engineer & AI Enthusiast with experience in Python, SQL, PySpark, Databricks, ETL pipelines, and data analytics.
-
-Technical Interests
-Data Engineering
+12. Technology
+Python
 PySpark
 Databricks
-ETL / ELT
+Delta Lake
 SQL
-Cloud Data Platforms
-Artificial Intelligence
-Generative AI
-⭐ Project Highlights
-✔ 250K+ Sales Records
-✔ 40K Customers
-✔ 2K Products
-✔ Medallion Architecture
-✔ PySpark
-✔ Databricks
-✔ Delta Lake
-✔ 13 Business Analytics
-✔ Data Quality Framework
-✔ Parallel Silver Processing
-✔ Automated Databricks Workflow
-✔ Retry Configuration
-✔ Email Notifications
-
-
-                   DATA QUALITY
-                         ↓
-                      SUCC
+Databricks Workflows
+GitHub
