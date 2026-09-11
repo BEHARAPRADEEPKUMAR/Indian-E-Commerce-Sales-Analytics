@@ -1,0 +1,214 @@
+1. Project Overview
+
+This project implements an end-to-end Indian E-Commerce Sales Analytics data engineering pipeline using Databricks and PySpark.
+
+The pipeline follows the Medallion Architecture:
+
+Raw CSV Files
+      ↓
+   Bronze
+      ↓
+   Silver
+      ↓
+    Gold
+      ↓
+ Analytics
+      ↓
+ Data Quality
+2. Technology Stack
+Technology	Purpose
+Databricks	Data engineering platform
+PySpark	Data processing and transformation
+Delta Lake	Storage format
+SQL	Data analysis and validation
+Python	Transformation and analytics
+Databricks Workflows	Pipeline orchestration
+3. Data Sources
+
+The project uses three CSV files:
+
+customers.csv
+products.csv
+sales.csv
+Source volumes
+Customers : 40,000
+Products  : 2,000
+Sales     : 250,000
+4. Medallion Architecture
+Bronze Layer
+
+The Bronze layer ingests the raw CSV files into Delta tables with minimal transformation.
+
+customers.csv ──→ bronze_customers
+products.csv  ──→ bronze_products
+sales.csv     ──→ bronze_sales
+
+Purpose:
+
+Raw data ingestion
+Preserve source data
+Create Delta-based storage
+Establish the foundation for downstream processing
+Silver Layer
+
+The Silver layer cleans and validates the Bronze data.
+
+bronze_customers ──→ silver_customers
+bronze_products  ──→ silver_products
+bronze_sales     ──→ silver_sales
+
+Typical processing includes:
+
+Data type standardization
+Null handling
+Duplicate validation
+Date validation
+Numeric validation
+Business-rule checks
+Data cleansing
+Gold Layer
+
+The Gold layer contains business-ready dimensional and fact tables.
+
+Dimensions
+dim_customer
+dim_product
+dim_date
+Fact
+fact_sales
+
+The fact table uses:
+
+Order_ID
+
+as the order-level grain.
+
+5. Gold Analytics Layer
+
+Business analytics are generated from the Gold layer.
+
+fact_sales
+    ↓
+gold_analytics
+
+The project answers 13 business questions:
+
+Total Sales
+Monthly Revenue
+Revenue Trend and Seasonality
+Order Status Performance
+Payment Method Performance
+State-wise Sales
+City-wise Sales
+Top Customers
+Best-Selling Products
+Category Performance
+Brand Performance
+Product Ratings
+Coupon Performance
+6. Data Quality Layer
+
+The final pipeline stage validates the processed data.
+
+Checks include:
+
+Row counts
+Primary keys
+Foreign keys
+Critical null values
+Date validation
+Quantity validation
+Order status validation
+Negative transaction amount detection
+Revenue reconciliation
+Delivered units reconciliation
+
+Final result:
+
+Failed Checks   : 0
+Warning Checks  : 1
+Overall Status  : PASS
+
+The single warning relates to 5 negative Total_Amount records, which were retained and flagged for business review.
+
+7. Workflow Architecture
+
+The Databricks Workflow is:
+
+                    ┌── silver_customers ──┐
+                    │                      │
+bronze_ingestion ───┼── silver_products ───┼──→ gold_dimensions
+                    │                      │
+                    └── silver_sales ──────┘
+                                             ↓
+                                      gold_fact_sales
+                                             ↓
+                                       gold_analytics
+                                             ↓
+                                        data_quality
+
+The three Silver tasks run in parallel after Bronze ingestion.
+
+The downstream Gold processing starts after the required Silver tasks complete.
+
+8. Orchestration
+
+The pipeline is orchestrated using Databricks Workflows.
+
+Configuration:
+
+Workflow:
+ecommerce_sales_analytics_pipeline
+
+Tasks:
+8
+
+Silver tasks:
+3 parallel tasks
+
+Retry policy:
+2 retries
+5-minute interval
+
+Notifications:
+Email on success/failure
+9. End-to-End Data Flow
+             RAW DATA
+                 │
+       ┌─────────┼─────────┐
+       ↓         ↓         ↓
+   Customers  Products   Sales
+       │         │         │
+       └─────────┼─────────┘
+                 ↓
+             BRONZE
+                 ↓
+       ┌─────────┼─────────┐
+       ↓         ↓         ↓
+    Silver    Silver     Silver
+ Customers   Products    Sales
+       └─────────┼─────────┘
+                 ↓
+               GOLD
+                 ↓
+       Dimensions + Fact
+                 ↓
+            Analytics
+                 ↓
+          Data Quality
+                 ↓
+             PASS ✅
+10. Business Outcome
+
+The pipeline transforms raw e-commerce transactional data into reliable, analytics-ready datasets that can be used to analyze:
+
+Revenue performance
+Customer behavior
+Product performance
+Category and brand performance
+Payment preferences
+Geographic sales
+Order failures
+Ratings
+Coupon performance
+Revenue trends and seasonality
